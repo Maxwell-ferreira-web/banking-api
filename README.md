@@ -63,11 +63,103 @@ POST /api/contas
   "saldoInicial": 1000.00
 }
 
-
 ## 🚀 Como executar o projeto
 
 ### 1. **Clone o repositório:**
 ```bash
 git clone https://github.com/Maxwell-ferreira-web/banking-api.git
 cd banking-api
+
+
+## 📋 Endpoints da API
+
+### **Contas Bancárias**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/api/contas` | Criar nova conta |
+| `GET` | `/api/contas/{numero}` | Consultar conta |
+| `GET` | `/api/contas` | Listar todas as contas |
+
+### **Operações Financeiras**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `POST` | `/api/contas/{numero}/deposito` | Realizar depósito |
+| `POST` | `/api/contas/{numero}/saque` | Realizar saque |
+| `POST` | `/api/contas/transferencia` | Transferir entre contas |
+
+### **Histórico**
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/contas/{numero}/transacoes` | Histórico de transações |
+
+## 🧪 Testando a API
+
+### **Usando Postman:**
+1. Importe a collection: `Banking-API.postman_collection.json`
+2. Execute os requests na seguinte ordem:
+   - Criar contas
+   - Realizar operações
+   - Consultar histórico
+
+### **Exemplo de requisição:**
+```json
+POST /api/contas
+{
+  "titular": "Maxwell Ferreira",
+  "cpf": "12345678901",
+  "saldoInicial": 1000.00
+}
+
+
+## 💡 Validações Implementadas
+
+- ✅ **Saldo suficiente** para saques e transferências
+- ✅ **Valores positivos** nas operações
+- ✅ **Conta de destino existente** nas transferências
+- ✅ **CPF único** por conta
+- ✅ **Dados obrigatórios** validados
+
+## 🔒 Segurança
+
+- Validação de entrada de dados
+- Tratamento de exceções personalizado
+- Logs de transações
+- Controle de CORS configurado
+
+## 📊 Banco de Dados
+
+### **Configuração H2:**
+- **URL:** `jdbc:h2:mem:bankingdb`
+- **Usuario:** `sa`
+- **Senha:** *(vazia)*
+
+### **Tabelas criadas automaticamente:**
+- `CLIENTE` - Dados dos clientes
+- `CONTA_BANCARIA` - Informações das contas  
+- `TRANSACAO` - Histórico de movimentações
+
+## 🎯 Próximas Melhorias
+
+- [ ] Autenticação JWT
+- [ ] Testes unitários e integração
+- [ ] Deploy em container Docker
+- [ ] Integração com banco PostgreSQL
+- [ ] Dashboard web para visualização
+- [ ] Relatórios em PDF/CSV
+
+## 👨‍💻 Desenvolvedor
+
+**Maxwell Ferreira**
+- GitHub: [@Maxwell-ferreira-web](https://github.com/Maxwell-ferreira-web)
+- LinkedIn: [Maxwell Ferreira](https://linkedin.com/in/maxwell-ferreira)
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+---
+
+⭐ **Se este projeto foi útil, deixe uma estrela!**
+
+
 
