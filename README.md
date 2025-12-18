@@ -138,15 +138,6 @@ POST /api/contas
 - `CONTA_BANCARIA` - Informações das contas  
 - `TRANSACAO` - Histórico de movimentações
 
-## 🎯 Próximas Melhorias
-
-- [ ] Autenticação JWT
-- [ ] Testes unitários e integração
-- [ ] Deploy em container Docker
-- [ ] Integração com banco PostgreSQL
-- [ ] Dashboard web para visualização
-- [ ] Relatórios em PDF/CSV
-
 ## 👨‍💻 Desenvolvedor
 
 **Maxwell Ferreira**
@@ -160,6 +151,7 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 ---
 
 ⭐ **Se este projeto foi útil, deixe uma estrela!**
+
 
 
 
