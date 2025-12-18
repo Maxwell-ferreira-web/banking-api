@@ -63,6 +63,20 @@ POST /api/contas
   "saldoInicial": 1000.00
 }
 
+🏗️ Estrutura do Projeto
+
+src/
+├── main/java/com/bankingapi/
+│   ├── controller/     # Controladores REST
+│   ├── service/        # Lógica de negócio
+│   ├── entity/         # Entidades JPA
+│   ├── repository/     # Repositórios
+│   ├── dto/            # Data Transfer Objects
+│   ├── exception/      # Tratamento de exceções
+│   └── config/         # Configurações
+└── resources/
+    └── application.properties
+
 ## 🚀 Como executar o projeto
 
 ### 1. **Clone o repositório:**
@@ -151,6 +165,7 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 ---
 
 ⭐ **Se este projeto foi útil, deixe uma estrela!**
+
 
 
 
