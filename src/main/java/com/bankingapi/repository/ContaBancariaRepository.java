@@ -1,0 +1,23 @@
+package com.bankingapi.repository;
+
+import com.bankingapi.entity.ContaBancaria;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ContaBancariaRepository extends JpaRepository<ContaBancaria, Long> {
+    
+    List<ContaBancaria> findByAtivaTrue();
+    
+    Optional<ContaBancaria> findByIdAndAtivaTrue(Long id);
+    
+    Optional<ContaBancaria> findByNumero(String numero);
+    
+    @Query("SELECT c FROM ContaBancaria c WHERE c.ativa = true ORDER BY c.dataCriacao DESC")
+    List<ContaBancaria> findAllActiveOrderByDataCriacao();
+    
+    boolean existsByNumero(String numero);
+}
