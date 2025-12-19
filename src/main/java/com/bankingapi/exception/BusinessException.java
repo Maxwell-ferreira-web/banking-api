@@ -1,8 +1,5 @@
 package com.bankingapi.exception;
 
-/**
- * Exceção para regras de negócio da aplicação
- */
 public class BusinessException extends RuntimeException {
     
     private String code;
