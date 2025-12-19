@@ -29,11 +29,9 @@ public class ContaService {
     private TransacaoRepository transacaoRepository;
     
     public ContaBancariaResponseDTO criarConta(ContaBancariaRequestDTO request) {
-        // Buscar cliente existente ou criar novo
         Cliente cliente = clienteRepository.findByCpf(request.getCpfCliente())
                 .orElse(null);
         
-        // Se cliente não existe, criar novo
         if (cliente == null) {
             cliente = new Cliente();
             cliente.setNome(request.getNomeCliente());
@@ -42,7 +40,6 @@ public class ContaService {
             cliente = clienteRepository.save(cliente);
         }
         
-        // Criar conta
         ContaBancaria conta = new ContaBancaria();
         conta.setNumero(gerarNumeroConta());
         conta.setSaldo(request.getSaldoInicial());
@@ -51,7 +48,6 @@ public class ContaService {
         conta.setDataCriacao(LocalDateTime.now());
         conta = contaBancariaRepository.save(conta);
         
-        // Registrar transação inicial se houver saldo
         if (request.getSaldoInicial().compareTo(BigDecimal.ZERO) > 0) {
             registrarTransacao(null, conta, TipoTransacao.DEPOSITO, 
                 request.getSaldoInicial(), "Depósito inicial");
@@ -76,7 +72,6 @@ public class ContaService {
     public ContaBancariaResponseDTO depositar(Long contaId, TransacaoRequestDTO request) {
         ContaBancaria conta = buscarContaPorId(contaId);
         
-        // Usar método de negócio da entidade
         conta.depositar(request.getValor());
         conta = contaBancariaRepository.save(conta);
         
@@ -89,7 +84,6 @@ public class ContaService {
     public ContaBancariaResponseDTO sacar(Long contaId, TransacaoRequestDTO request) {
         ContaBancaria conta = buscarContaPorId(contaId);
         
-        // Usar método de negócio da entidade
         conta.sacar(request.getValor());
         conta = contaBancariaRepository.save(conta);
         
@@ -107,14 +101,12 @@ public class ContaService {
             throw new BusinessException("Conta origem e destino não podem ser iguais");
         }
         
-        // Usar métodos de negócio das entidades
         contaOrigem.sacar(request.getValor());
         contaDestino.depositar(request.getValor());
         
         contaBancariaRepository.save(contaOrigem);
         contaBancariaRepository.save(contaDestino);
         
-        // Registrar UMA transação de transferência
         registrarTransacao(contaOrigem, contaDestino, TipoTransacao.TRANSFERENCIA, 
             request.getValor(), request.getDescricao());
         
@@ -188,7 +180,6 @@ public class ContaService {
         dto.setAtiva(conta.getAtiva());
         dto.setDataCriacao(conta.getDataCriacao());
         
-        // Converter cliente para ClienteResponseDTO
         if (conta.getCliente() != null) {
             ClienteResponseDTO clienteDto = new ClienteResponseDTO();
             clienteDto.setId(conta.getCliente().getId());
