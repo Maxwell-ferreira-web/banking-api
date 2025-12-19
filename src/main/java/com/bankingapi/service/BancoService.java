@@ -80,8 +80,10 @@ public class BancoService implements IBancoService {
     @Override
     public void depositar(Long contaId, OperacaoDTO dto) {
         ContaBancaria conta = buscarConta(contaId);
+        
         conta.depositar(dto.getValor());
         contaBancariaRepository.save(conta);
+        
         registrarTransacao(null, conta, TipoTransacao.DEPOSITO, 
                          dto.getValor(), dto.getDescricao());
     }
@@ -89,8 +91,10 @@ public class BancoService implements IBancoService {
     @Override
     public void sacar(Long contaId, OperacaoDTO dto) {
         ContaBancaria conta = buscarConta(contaId);
+        
         conta.sacar(dto.getValor());
         contaBancariaRepository.save(conta);
+        
         registrarTransacao(conta, null, TipoTransacao.SAQUE, 
                          dto.getValor(), dto.getDescricao());
     }
