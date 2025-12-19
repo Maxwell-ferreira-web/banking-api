@@ -1,13 +1,15 @@
 package com.bankingapi.repository;
 
-import com.bankingapi.entity.ContaBancaria;
-import com.bankingapi.entity.Transacao;
-import com.bankingapi.enums.TipoTransacao;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import java.util.List;
+
+import com.bankingapi.entity.ContaBancaria;
+import com.bankingapi.entity.Transacao;
+import com.bankingapi.enums.TipoTransacao;
 
 @Repository
 public interface TransacaoRepository extends JpaRepository<Transacao, Long> {

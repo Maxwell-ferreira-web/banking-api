@@ -1,29 +1,38 @@
 package com.bankingapi.service;
 
-import com.bankingapi.dto.*;
-import com.bankingapi.entity.*;
-import com.bankingapi.enums.TipoTransacao;
-import com.bankingapi.exception.*;
-import com.bankingapi.repository.*;
-import com.bankingapi.utils.CsvExporter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Serviço principal para operações bancárias
- */
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.bankingapi.dto.NovaContaDTO;
+import com.bankingapi.dto.OperacaoDTO;
+import com.bankingapi.dto.TransferenciaDTO;
+import com.bankingapi.entity.Cliente;
+import com.bankingapi.entity.ContaBancaria;
+import com.bankingapi.entity.ContaCorrente;
+import com.bankingapi.entity.ContaPoupanca;
+import com.bankingapi.entity.Transacao;
+import com.bankingapi.enums.TipoTransacao;
+import com.bankingapi.exception.BusinessException;
+import com.bankingapi.exception.NotFoundException;
+import com.bankingapi.repository.ClienteRepository;
+import com.bankingapi.repository.ContaBancariaRepository;
+import com.bankingapi.repository.TransacaoRepository;
+import com.bankingapi.service.interfaces.IBancoService;
+import com.bankingapi.utils.CsvExporter;
+
 @Service
 @Transactional
-public class BancoService {
+public class BancoService implements IBancoService {
     
     @Autowired
     private ClienteRepository clienteRepository;
     
     @Autowired
-    private ContaBancariaRepository contaBancariaRepository; // CORRIGIDO
+    private ContaBancariaRepository contaBancariaRepository;
     
     @Autowired
     private TransacaoRepository transacaoRepository;
@@ -31,164 +40,173 @@ public class BancoService {
     @Autowired
     private CsvExporter csvExporter;
     
-    /**
-     * Lista todas as contas cadastradas
-     */
+    @Override
     @Transactional(readOnly = true)
     public List<ContaBancaria> listarContas() {
-        return contaBancariaRepository.findAll(); // CORRIGIDO
+        return contaBancariaRepository.findAll();
     }
     
-    /**
-     * Busca conta por ID
-     */
+    @Override
     @Transactional(readOnly = true)
     public ContaBancaria buscarConta(Long id) {
-        return contaBancariaRepository.findById(id) // CORRIGIDO
-                .orElseThrow(() -> new NotFoundException("Conta", id));
+        return contaBancariaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Conta não encontrada", id));
     }
     
-    /**
-     * Cria nova conta bancária
-     */
+    @Override
     public ContaBancaria criarConta(NovaContaDTO dto) {
-        // Validar CPF
         validarCpf(dto.getCpfCliente());
         
-        // Buscar ou criar cliente
         Cliente cliente = clienteRepository.findByCpf(dto.getCpfCliente())
                 .orElse(new Cliente(dto.getNomeCliente(), dto.getCpfCliente()));
         
-        // Salvar cliente se é novo
         if (cliente.getId() == null) {
             cliente = clienteRepository.save(cliente);
         }
         
-        // Gerar número único da conta
         String numeroConta = gerarNumeroConta();
         
-        // Criar conta
-        ContaBancaria conta = new ContaBancaria(numeroConta, cliente, dto.getSaldoInicial());
-        conta = contaBancariaRepository.save(conta); // CORRIGIDO
+        ContaBancaria conta = criarContaEspecifica(dto.getTipoConta(), numeroConta, cliente, dto.getSaldoInicial());
+        conta = contaBancariaRepository.save(conta);
         
-        // Registrar transação de depósito inicial se saldo > 0
         if (dto.getSaldoInicial().compareTo(BigDecimal.ZERO) > 0) {
-            registrarTransacao(null, conta, TipoTransacao.DEPOSITO, // CORRIGIDO
+            registrarTransacao(null, conta, TipoTransacao.DEPOSITO,
                              dto.getSaldoInicial(), "Depósito inicial");
         }
         
         return conta;
     }
     
-    /**
-     * Realiza depósito em conta
-     */
+    @Override
     public void depositar(Long contaId, OperacaoDTO dto) {
         ContaBancaria conta = buscarConta(contaId);
-        
-        // Realizar depósito
         conta.depositar(dto.getValor());
-        contaBancariaRepository.save(conta); 
-        
-        // Registrar transação
+        contaBancariaRepository.save(conta);
         registrarTransacao(null, conta, TipoTransacao.DEPOSITO, 
                          dto.getValor(), dto.getDescricao());
     }
     
-    /**
-     * Realiza saque de conta
-     */
+    @Override
     public void sacar(Long contaId, OperacaoDTO dto) {
         ContaBancaria conta = buscarConta(contaId);
-        
-        // Realizar saque
         conta.sacar(dto.getValor());
-        contaBancariaRepository.save(conta); 
-        
-        // Registrar transação
+        contaBancariaRepository.save(conta);
         registrarTransacao(conta, null, TipoTransacao.SAQUE, 
                          dto.getValor(), dto.getDescricao());
     }
     
-    /**
-     * Realiza transferência entre contas
-     */
+    @Override
     public void transferir(TransferenciaDTO dto) {
-        // Validar se contas são diferentes
         if (dto.getContaOrigemId().equals(dto.getContaDestinoId())) {
             throw new BusinessException("SAME_ACCOUNT", 
                 "Conta origem e destino não podem ser iguais");
         }
         
-        // Buscar contas
         ContaBancaria contaOrigem = buscarConta(dto.getContaOrigemId());
         ContaBancaria contaDestino = buscarConta(dto.getContaDestinoId());
         
-        // Realizar transferência
+        if (!contaOrigem.podeTransferir(dto.getValor())) {
+            throw new BusinessException("TRANSFER_NOT_ALLOWED", 
+                "Transferência não permitida para esta conta");
+        }
+        
         contaOrigem.sacar(dto.getValor());
         contaDestino.depositar(dto.getValor());
         
-        // Salvar contas
-        contaBancariaRepository.save(contaOrigem); 
-        contaBancariaRepository.save(contaDestino); 
+        contaBancariaRepository.save(contaOrigem);
+        contaBancariaRepository.save(contaDestino);
         
-        // Registrar transação
         registrarTransacao(contaOrigem, contaDestino, TipoTransacao.TRANSFERENCIA, 
                          dto.getValor(), dto.getDescricao());
     }
     
-    /**
-     * Exporta dados das contas para CSV
-     */
-    @Transactional(readOnly = true)
-    public String exportar() {
-        List<ContaBancaria> contas = contaBancariaRepository.findAll(); 
-        return csvExporter.exportarContas(contas);
-    }
-    
-    /**
-     * Busca histórico de transações de uma conta
-     */
+    @Override
     @Transactional(readOnly = true)
     public List<Transacao> buscarHistorico(Long contaId) {
         ContaBancaria conta = buscarConta(contaId);
-        return transacaoRepository.findByContaOrderByDataTransacaoDesc(conta); 
+        return transacaoRepository.findByContaOrderByDataTransacaoDesc(conta);
     }
     
-    // --- MÉTODOS PRIVADOS ---
+    @Override
+    @Transactional(readOnly = true)
+    public String exportar() {
+        List<ContaBancaria> contas = contaBancariaRepository.findAll();
+        return csvExporter.exportarContas(contas);
+    }
     
-    /**
-     * Registra uma transação
-     */
+    @Override
+    public void alterarLimiteCredito(Long contaId, BigDecimal novoLimite) {
+        ContaBancaria conta = buscarConta(contaId);
+        
+        if (conta instanceof ContaCorrente) {
+            ContaCorrente contaCorrente = (ContaCorrente) conta;
+            contaCorrente.setLimiteCredito(novoLimite);
+            contaBancariaRepository.save(contaCorrente);
+        } else {
+            throw new BusinessException("LIMIT_NOT_SUPPORTED", 
+                "Limite de crédito disponível apenas para Conta Corrente");
+        }
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal consultarSaldoComLimite(Long contaId) {
+        ContaBancaria conta = buscarConta(contaId);
+        return conta.getSaldo().add(conta.getLimiteCredito());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal calcularRendimento(Long contaId) {
+        ContaBancaria conta = buscarConta(contaId);
+        
+        if (conta instanceof ContaPoupanca) {
+            ContaPoupanca contaPoupanca = (ContaPoupanca) conta;
+            return contaPoupanca.calcularRendimento();
+        } else {
+            throw new BusinessException("INCOME_NOT_SUPPORTED", 
+                "Rendimento disponível apenas para Conta Poupança");
+        }
+    }
+    
+    private ContaBancaria criarContaEspecifica(String tipoConta, String numero, 
+                                             Cliente cliente, BigDecimal saldoInicial) {
+        if (tipoConta == null) {
+            tipoConta = "CORRENTE";
+        }
+        
+        switch (tipoConta.toUpperCase()) {
+            case "CORRENTE":
+                return new ContaCorrente(numero, cliente, saldoInicial);
+            case "POUPANCA":
+                return new ContaPoupanca(numero, cliente, saldoInicial);
+            default:
+                throw new BusinessException("INVALID_ACCOUNT_TYPE", 
+                    "Tipo de conta inválido: " + tipoConta + ". Use: CORRENTE ou POUPANCA");
+        }
+    }
+    
     private void registrarTransacao(ContaBancaria origem, ContaBancaria destino, 
-                                  TipoTransacao tipo, BigDecimal valor, String descricao) { 
+                                  TipoTransacao tipo, BigDecimal valor, String descricao) {
         Transacao transacao = new Transacao(origem, destino, tipo, valor, descricao);
         transacaoRepository.save(transacao);
     }
     
-    /**
-     * Gera número único para conta
-     */
     private String gerarNumeroConta() {
         String numero;
         do {
-            // Gera número baseado no timestamp + random
             long timestamp = System.currentTimeMillis();
             numero = String.format("%010d", timestamp % 10000000000L);
-        } while (contaBancariaRepository.existsByNumero(numero)); 
+        } while (contaBancariaRepository.existsByNumero(numero));
         
         return numero;
     }
     
-    /**
-     * Valida CPF (validação básica)
-     */
     private void validarCpf(String cpf) {
         if (cpf == null || cpf.length() != 11 || !cpf.matches("\\d{11}")) {
             throw new BusinessException("INVALID_CPF", "CPF deve conter exatamente 11 dígitos numéricos");
         }
         
-        // Verificar se não é CPF com todos os dígitos iguais
         if (cpf.matches("(\\d)\\1{10}")) {
             throw new BusinessException("INVALID_CPF", "CPF inválido");
         }

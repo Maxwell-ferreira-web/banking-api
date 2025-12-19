@@ -1,7 +1,12 @@
 package com.bankingapi.dto;
 
-import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class NovaContaDTO {
     
@@ -17,7 +22,9 @@ public class NovaContaDTO {
     @DecimalMin(value = "0.00", message = "Saldo inicial não pode ser negativo")
     private BigDecimal saldoInicial;
     
-    // Constructors
+    @Pattern(regexp = "CORRENTE|POUPANCA", message = "Tipo deve ser CORRENTE ou POUPANCA")
+    private String tipoConta = "CORRENTE";
+    
     public NovaContaDTO() {}
     
     public NovaContaDTO(String nomeCliente, String cpfCliente, BigDecimal saldoInicial) {
@@ -26,7 +33,13 @@ public class NovaContaDTO {
         this.saldoInicial = saldoInicial;
     }
     
-    // Getters and Setters
+    public NovaContaDTO(String nomeCliente, String cpfCliente, BigDecimal saldoInicial, String tipoConta) {
+        this.nomeCliente = nomeCliente;
+        this.cpfCliente = cpfCliente;
+        this.saldoInicial = saldoInicial;
+        this.tipoConta = tipoConta;
+    }
+    
     public String getNomeCliente() { return nomeCliente; }
     public void setNomeCliente(String nomeCliente) { this.nomeCliente = nomeCliente; }
     
@@ -36,9 +49,12 @@ public class NovaContaDTO {
     public BigDecimal getSaldoInicial() { return saldoInicial; }
     public void setSaldoInicial(BigDecimal saldoInicial) { this.saldoInicial = saldoInicial; }
     
+    public String getTipoConta() { return tipoConta; }
+    public void setTipoConta(String tipoConta) { this.tipoConta = tipoConta; }
+    
     @Override
     public String toString() {
         return "NovaContaDTO{nomeCliente='" + nomeCliente + "', cpfCliente='" + cpfCliente + 
-               "', saldoInicial=" + saldoInicial + "}";
+               "', saldoInicial=" + saldoInicial + ", tipoConta='" + tipoConta + "'}";
     }
 }

@@ -8,7 +8,6 @@ public class TransferenciaRequestDTO {
     private BigDecimal valor;
     private String descricao;
     
-    // Construtores
     public TransferenciaRequestDTO() {}
     
     public TransferenciaRequestDTO(Long contaOrigemId, Long contaDestinoId, BigDecimal valor, String descricao) {
@@ -18,7 +17,6 @@ public class TransferenciaRequestDTO {
         this.descricao = descricao;
     }
     
-    // Getters e Setters
     public Long getContaOrigemId() {
         return contaOrigemId;
     }

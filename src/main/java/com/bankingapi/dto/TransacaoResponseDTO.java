@@ -1,8 +1,9 @@
 package com.bankingapi.dto;
 
-import com.bankingapi.enums.TipoTransacao;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.bankingapi.enums.TipoTransacao;
 
 public class TransacaoResponseDTO {
     

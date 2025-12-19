@@ -1,7 +1,12 @@
 package com.bankingapi.dto;
 
-import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class TransferenciaDTO {
     
@@ -21,7 +26,6 @@ public class TransferenciaDTO {
     @Size(max = 500, message = "Descrição deve ter no máximo 500 caracteres")
     private String descricao;
     
-    // Constructors
     public TransferenciaDTO() {}
     
     public TransferenciaDTO(Long contaOrigemId, Long contaDestinoId, BigDecimal valor) {
@@ -37,7 +41,6 @@ public class TransferenciaDTO {
         this.descricao = descricao;
     }
     
-    // Getters and Setters
     public Long getContaOrigemId() { return contaOrigemId; }
     public void setContaOrigemId(Long contaOrigemId) { this.contaOrigemId = contaOrigemId; }
     

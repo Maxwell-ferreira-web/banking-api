@@ -1,23 +1,19 @@
 package com.bankingapi.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.validation.FieldError;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Manipulador global de exceções
- */
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 @RestControllerAdvice
 public class ExceptionHandlerConfig {
     
-    /**
-     * Trata exceções de recurso não encontrado
-     */
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundException ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -27,9 +23,6 @@ public class ExceptionHandlerConfig {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
     
-    /**
-     * Trata exceções de regras de negócio
-     */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -41,9 +34,6 @@ public class ExceptionHandlerConfig {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
-    /**
-     * Trata exceções de validação
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -59,9 +49,6 @@ public class ExceptionHandlerConfig {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
-    /**
-     * Trata argumentos inválidos
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -71,9 +58,6 @@ public class ExceptionHandlerConfig {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     
-    /**
-     * Trata estados inválidos
-     */
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalStateException(IllegalStateException ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -83,9 +67,6 @@ public class ExceptionHandlerConfig {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
     
-    /**
-     * Trata exceções genéricas
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         Map<String, Object> errorResponse = createErrorResponse(
@@ -93,16 +74,12 @@ public class ExceptionHandlerConfig {
             "Erro interno do servidor. Tente novamente mais tarde."
         );
         
-        // Log do erro real para debug (não expostos ao cliente)
         System.err.println("Erro interno: " + ex.getMessage());
         ex.printStackTrace();
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
     
-    /**
-     * Cria resposta padrão de erro
-     */
     private Map<String, Object> createErrorResponse(HttpStatus status, String code, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
@@ -110,7 +87,7 @@ public class ExceptionHandlerConfig {
         errorResponse.put("error", status.getReasonPhrase());
         errorResponse.put("code", code);
         errorResponse.put("message", message);
-        errorResponse.put("path", ""); // Pode ser melhorado para incluir o path da requisição
+        errorResponse.put("path", ""); 
         
         return errorResponse;
     }

@@ -6,7 +6,6 @@ public class TransacaoRequestDTO {
     private BigDecimal valor;
     private String descricao;
     
-    // Construtores
     public TransacaoRequestDTO() {}
     
     public TransacaoRequestDTO(BigDecimal valor, String descricao) {
@@ -14,7 +13,6 @@ public class TransacaoRequestDTO {
         this.descricao = descricao;
     }
     
-    // Getters e Setters
     public BigDecimal getValor() {
         return valor;
     }

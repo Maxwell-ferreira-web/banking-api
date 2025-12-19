@@ -13,7 +13,6 @@ public class TransferenciaResponseDTO {
     private ContaBancariaResponseDTO contaOrigem;
     private ContaBancariaResponseDTO contaDestino;
     
-    // Construtores
     public TransferenciaResponseDTO() {}
     
     public TransferenciaResponseDTO(Long transacaoOrigemId, Long transacaoDestinoId, 
@@ -30,7 +29,6 @@ public class TransferenciaResponseDTO {
         this.contaDestino = contaDestino;
     }
     
-    // Getters e Setters
     public Long getTransacaoOrigemId() {
         return transacaoOrigemId;
     }

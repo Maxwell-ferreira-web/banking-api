@@ -1,9 +1,7 @@
 package com.bankingapi.exception;
 
-/**
- * Exceção para recursos não encontrados
- */
 public class NotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
     
     private String resourceType;
     private Object resourceId;

@@ -1,9 +1,7 @@
 package com.bankingapi.exception;
 
-/**
- * Exceção para regras de negócio da aplicação
- */
 public class BusinessException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
     
     private String code;
     

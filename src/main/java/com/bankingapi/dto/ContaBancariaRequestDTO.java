@@ -1,11 +1,11 @@
 package com.bankingapi.dto;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-
-import java.math.BigDecimal;
 
 public class ContaBancariaRequestDTO {
     
@@ -20,7 +20,9 @@ public class ContaBancariaRequestDTO {
     @DecimalMin(value = "0.0", inclusive = true, message = "Saldo inicial deve ser maior ou igual a zero")
     private BigDecimal saldoInicial;
     
-    // Construtores
+    @Pattern(regexp = "CORRENTE|POUPANCA", message = "Tipo deve ser CORRENTE ou POUPANCA")
+    private String tipoConta = "CORRENTE";
+    
     public ContaBancariaRequestDTO() {}
     
     public ContaBancariaRequestDTO(String nomeCliente, String cpfCliente, BigDecimal saldoInicial) {
@@ -29,28 +31,22 @@ public class ContaBancariaRequestDTO {
         this.saldoInicial = saldoInicial;
     }
     
-    // Getters e Setters
-    public String getNomeCliente() {
-        return nomeCliente;
-    }
-    
-    public void setNomeCliente(String nomeCliente) {
+    public ContaBancariaRequestDTO(String nomeCliente, String cpfCliente, BigDecimal saldoInicial, String tipoConta) {
         this.nomeCliente = nomeCliente;
-    }
-    
-    public String getCpfCliente() {
-        return cpfCliente;
-    }
-    
-    public void setCpfCliente(String cpfCliente) {
         this.cpfCliente = cpfCliente;
-    }
-    
-    public BigDecimal getSaldoInicial() {
-        return saldoInicial;
-    }
-    
-    public void setSaldoInicial(BigDecimal saldoInicial) {
         this.saldoInicial = saldoInicial;
+        this.tipoConta = tipoConta;
     }
+    
+    public String getNomeCliente() { return nomeCliente; }
+    public void setNomeCliente(String nomeCliente) { this.nomeCliente = nomeCliente; }
+    
+    public String getCpfCliente() { return cpfCliente; }
+    public void setCpfCliente(String cpfCliente) { this.cpfCliente = cpfCliente; }
+    
+    public BigDecimal getSaldoInicial() { return saldoInicial; }
+    public void setSaldoInicial(BigDecimal saldoInicial) { this.saldoInicial = saldoInicial; }
+    
+    public String getTipoConta() { return tipoConta; }
+    public void setTipoConta(String tipoConta) { this.tipoConta = tipoConta; }
 }

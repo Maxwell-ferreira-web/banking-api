@@ -1,23 +1,35 @@
 package com.bankingapi.service;
-
-import com.bankingapi.dto.*;
-import com.bankingapi.entity.*;
-import com.bankingapi.enums.TipoTransacao;
-import com.bankingapi.exception.*;
-import com.bankingapi.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.bankingapi.dto.ClienteResponseDTO;
+import com.bankingapi.dto.ContaBancariaRequestDTO;
+import com.bankingapi.dto.ContaBancariaResponseDTO;
+import com.bankingapi.dto.TransacaoRequestDTO;
+import com.bankingapi.dto.TransacaoResponseDTO;
+import com.bankingapi.dto.TransferenciaRequestDTO;
+import com.bankingapi.dto.TransferenciaResponseDTO;
+import com.bankingapi.entity.Cliente;
+import com.bankingapi.entity.ContaBancaria;
+import com.bankingapi.entity.ContaCorrente;
+import com.bankingapi.entity.ContaPoupanca;
+import com.bankingapi.entity.Transacao;
+import com.bankingapi.enums.TipoTransacao;
+import com.bankingapi.exception.BusinessException;
+import com.bankingapi.exception.NotFoundException;
+import com.bankingapi.repository.ClienteRepository;
+import com.bankingapi.repository.ContaBancariaRepository;
+import com.bankingapi.repository.TransacaoRepository;
+import com.bankingapi.service.interfaces.IContaService;
 
 @Service
 @Transactional
-public class ContaService {
+public class ContaService implements IContaService {
     
     @Autowired
     private ContaBancariaRepository contaBancariaRepository;
@@ -29,11 +41,9 @@ public class ContaService {
     private TransacaoRepository transacaoRepository;
     
     public ContaBancariaResponseDTO criarConta(ContaBancariaRequestDTO request) {
-        // Buscar cliente existente ou criar novo
         Cliente cliente = clienteRepository.findByCpf(request.getCpfCliente())
                 .orElse(null);
         
-        // Se cliente não existe, criar novo
         if (cliente == null) {
             cliente = new Cliente();
             cliente.setNome(request.getNomeCliente());
@@ -42,16 +52,12 @@ public class ContaService {
             cliente = clienteRepository.save(cliente);
         }
         
-        // Criar conta
-        ContaBancaria conta = new ContaBancaria();
-        conta.setNumero(gerarNumeroConta());
-        conta.setSaldo(request.getSaldoInicial());
-        conta.setAtiva(true);
-        conta.setCliente(cliente);
-        conta.setDataCriacao(LocalDateTime.now());
+        ContaBancaria conta = criarContaEspecifica(request.getTipoConta(), 
+                                                 gerarNumeroConta(), 
+                                                 cliente, 
+                                                 request.getSaldoInicial());
         conta = contaBancariaRepository.save(conta);
         
-        // Registrar transação inicial se houver saldo
         if (request.getSaldoInicial().compareTo(BigDecimal.ZERO) > 0) {
             registrarTransacao(null, conta, TipoTransacao.DEPOSITO, 
                 request.getSaldoInicial(), "Depósito inicial");
@@ -73,10 +79,20 @@ public class ContaService {
         return convertToResponseDTO(conta);
     }
     
+    @Transactional(readOnly = true)
+    public List<TransacaoResponseDTO> buscarHistorico(Long contaId) {
+        buscarContaPorId(contaId);
+        
+        List<Transacao> transacoes = transacaoRepository.findByContaIdOrderByDataTransacaoDesc(contaId);
+        
+        return transacoes.stream()
+                .map(this::convertToTransacaoResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
     public ContaBancariaResponseDTO depositar(Long contaId, TransacaoRequestDTO request) {
         ContaBancaria conta = buscarContaPorId(contaId);
         
-        // Usar método de negócio da entidade
         conta.depositar(request.getValor());
         conta = contaBancariaRepository.save(conta);
         
@@ -89,7 +105,6 @@ public class ContaService {
     public ContaBancariaResponseDTO sacar(Long contaId, TransacaoRequestDTO request) {
         ContaBancaria conta = buscarContaPorId(contaId);
         
-        // Usar método de negócio da entidade
         conta.sacar(request.getValor());
         conta = contaBancariaRepository.save(conta);
         
@@ -107,14 +122,12 @@ public class ContaService {
             throw new BusinessException("Conta origem e destino não podem ser iguais");
         }
         
-        // Usar métodos de negócio das entidades
         contaOrigem.sacar(request.getValor());
         contaDestino.depositar(request.getValor());
         
         contaBancariaRepository.save(contaOrigem);
         contaBancariaRepository.save(contaDestino);
         
-        // Registrar UMA transação de transferência
         registrarTransacao(contaOrigem, contaDestino, TipoTransacao.TRANSFERENCIA, 
             request.getValor(), request.getDescricao());
         
@@ -154,6 +167,22 @@ public class ContaService {
         return csv.toString();
     }
     
+    private ContaBancaria criarContaEspecifica(String tipoConta, String numero, 
+                                             Cliente cliente, BigDecimal saldoInicial) {
+        if (tipoConta == null) {
+            tipoConta = "CORRENTE";
+        }
+        
+        switch (tipoConta.toUpperCase()) {
+            case "CORRENTE":
+                return new ContaCorrente(numero, cliente, saldoInicial);
+            case "POUPANCA":
+                return new ContaPoupanca(numero, cliente, saldoInicial);
+            default:
+                throw new BusinessException("Tipo de conta inválido: " + tipoConta);
+        }
+    }
+    
     private ContaBancaria buscarContaPorId(Long id) {
         return contaBancariaRepository.findByIdAndAtivaTrue(id)
                 .orElseThrow(() -> new NotFoundException("Conta não encontrada: " + id));
@@ -188,7 +217,6 @@ public class ContaService {
         dto.setAtiva(conta.getAtiva());
         dto.setDataCriacao(conta.getDataCriacao());
         
-        // Converter cliente para ClienteResponseDTO
         if (conta.getCliente() != null) {
             ClienteResponseDTO clienteDto = new ClienteResponseDTO();
             clienteDto.setId(conta.getCliente().getId());

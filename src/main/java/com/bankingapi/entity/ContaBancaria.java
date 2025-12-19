@@ -1,17 +1,35 @@
 package com.bankingapi.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "contas_bancarias")
-public class ContaBancaria {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "tipo_conta", discriminatorType = DiscriminatorType.STRING)
+public abstract class ContaBancaria {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,7 +73,10 @@ public class ContaBancaria {
         this.saldo = saldoInicial != null ? saldoInicial : BigDecimal.ZERO;
     }
     
-    // Business Methods
+    public abstract BigDecimal calcularTaxa();
+    public abstract BigDecimal getLimiteCredito();
+    public abstract String getTipoConta();
+    
     public void depositar(BigDecimal valor) {
         validarValorPositivo(valor);
         validarContaAtiva();
@@ -67,6 +88,13 @@ public class ContaBancaria {
         validarContaAtiva();
         validarSaldoSuficiente(valor);
         this.saldo = this.saldo.subtract(valor);
+    }
+    
+    public boolean podeTransferir(BigDecimal valor) {
+        return this.ativa && 
+               valor != null && 
+               valor.compareTo(BigDecimal.ZERO) > 0 &&
+               (this.saldo.add(getLimiteCredito())).compareTo(valor) >= 0;
     }
     
     private void validarValorPositivo(BigDecimal valor) {
@@ -82,8 +110,10 @@ public class ContaBancaria {
     }
     
     private void validarSaldoSuficiente(BigDecimal valor) {
-        if (this.saldo.compareTo(valor) < 0) {
-            throw new IllegalArgumentException("Saldo insuficiente. Saldo atual: " + this.saldo);
+        BigDecimal limiteTotal = this.saldo.add(getLimiteCredito());
+        if (limiteTotal.compareTo(valor) < 0) {
+            throw new IllegalArgumentException(
+                "Saldo insuficiente. Saldo disponível: " + limiteTotal);
         }
     }
     
@@ -113,6 +143,6 @@ public class ContaBancaria {
     
     @Override
     public String toString() {
-        return "ContaBancaria{id=" + id + ", numero='" + numero + "', saldo=" + saldo + "}";
+        return "ContaBancaria{id=" + id + ", numero='" + numero + "', tipo='" + getTipoConta() + "', saldo=" + saldo + "}";
     }
 }

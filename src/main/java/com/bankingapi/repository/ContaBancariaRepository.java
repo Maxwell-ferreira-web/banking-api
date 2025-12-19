@@ -1,11 +1,13 @@
 package com.bankingapi.repository;
 
-import com.bankingapi.entity.ContaBancaria;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import java.util.List;
-import java.util.Optional;
+
+import com.bankingapi.entity.ContaBancaria;
 
 @Repository
 public interface ContaBancariaRepository extends JpaRepository<ContaBancaria, Long> {
