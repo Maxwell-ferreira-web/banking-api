@@ -4,9 +4,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-/**
- * Aplicação principal da Banking API
- */
 @SpringBootApplication
 @EnableTransactionManagement
 public class BankingApiApplication {
