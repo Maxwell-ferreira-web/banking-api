@@ -1,8 +1,5 @@
 package com.bankingapi.exception;
 
-/**
- * Exceção para recursos não encontrados
- */
 public class NotFoundException extends RuntimeException {
     
     private String resourceType;
